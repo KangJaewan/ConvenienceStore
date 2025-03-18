@@ -40,8 +40,7 @@ def connect():
         print(error)
     return conn
 
-
-# def query_with_fetchall(conn):
+    # def query_with_fetchall(conn):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM product")
     rows = cursor.fetchall()
@@ -62,6 +61,8 @@ def connect():
         book_id = cursor.lastrowid
     conn.commit()
     return book_id
+
+
 def query_with_fetchall(conn):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Product")
@@ -80,51 +81,60 @@ def query_with_fetchall(conn):
     return rows
 
 
+def insert_or_update_product(conn, name, price, ex_date, num):
+    with conn.cursor() as cursor:
+        # 1. 동일한 상품이 있는지 확인
+        check_query = """
+        SELECT num FROM Product
+        WHERE name = %s AND price = %s AND ex_date = %s
+        """
+        cursor.execute(check_query, (name, price, ex_date))
+        result = cursor.fetchone()
 
-def insert_Product(conn, name, price, ex_date, num, changes):
-    # SQL 쿼리: 'time'을 NOW() 함수로 자동 설정
-    query = """
-    INSERT INTO Product(name, price, ex_date, num, time, changes)
-    VALUES (%s, %s, %s, %s, NOW(), %s)
+        if result:
+            # 2. 존재하면 수량 업데이트
+            update_query = """
+            UPDATE Product
+            SET num = num + %s, time = NOW(), changes = '수량 추가'
+            WHERE name = %s AND price = %s AND ex_date = %s
+            """
+            cursor.execute(update_query, (num, name, price, ex_date))
+        else:
+            # 3. 없으면 새로 삽입
+            insert_query = """
+            INSERT INTO Product(name, price, ex_date, num, time, changes)
+            VALUES (%s, %s, %s, %s, NOW(), '상품 등록')
+            """
+            cursor.execute(insert_query, (name, price, ex_date, num))
+
+    conn.commit()
+
+
+def update_Product(conn, name, num):
+    # 준비된 쿼리: 수량 업데이트, 변경 시간과 로그 추가
+    query = """ 
+    UPDATE Product
+    SET num = %s, time = NOW(), changes = '수량 변경'
+    WHERE name = %s
     """
 
-    # 입력받은 값들을 args로 묶어 전달 (time은 NOW()로 자동 처리)
-    args = (name, price, ex_date, num, changes)
+    data = (num, name)
 
-    # Product_id를 None으로 초기화
-    Product_id = None
+    affected_rows = 0  # 영향을 받은 행의 수를 저장할 변수 초기화
 
     # 데이터베이스에 쿼리 실행
     with conn.cursor() as cursor:
-        cursor.execute(query, args)
-        Product_id = cursor.lastrowid  # 마지막 삽입된 행의 ID를 가져옴
-
-    # 커밋하여 변경사항 저장
-    conn.commit()
-
-    return Product_id
-
-def update_book(Product_id, name):
-    # prepare query and data
-    query = """ UPDATE books
-                SET title = %s
-                WHERE id = %s """
-
-    data = (title, book_id)
-
-    affected_rows = 0  # Initialize the variable to store the number of affected rows
-
-    with conn.cursor() as cursor:
         cursor.execute(query, data)
-        affected_rows = cursor.rowcount
+        affected_rows = cursor.rowcount  # 변경된 행 수를 가져옴
+
+    # 커밋하여 변경 사항 저장
     conn.commit()
 
-    return affected_rows  # Return the number of affected rows
+    return affected_rows  # 변경된 행의 수 반환
 
-
-def delete_book(conn, book_id):
-    query = "DELETE FROM books WHERE id = %s"
-    data = (book_id,)
+def delete_Product(conn, name):
+    query = "DELETE FROM product WHERE name = %s"
+    data = (name,)
     affected_rows = 0  # Initialize the variable to store the number of affected rows
     with conn.cursor() as cursor:
         cursor.execute(query, data)
@@ -132,6 +142,37 @@ def delete_book(conn, book_id):
     conn.commit()
 
     return affected_rows  # Return the number of affected rows
+
+
+def show_product_logs(conn):
+    cursor = conn.cursor()
+    # 시간 순으로 정렬해서 가져오기
+    cursor.execute("SELECT name, changes, time FROM Product ORDER BY time ASC")
+    rows = cursor.fetchall()
+
+    print("📦 입출고 내역 (시간 순):")
+    print()
+
+    for idx, row in enumerate(rows, start=1):
+        name, changes, time = row
+        print(f"[{idx}] 상품명: {name}")
+        print(f"    변경 내용: {changes}")
+        print(f"    시간: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        print("-" * 40)
+
+    return rows
+
+
+def get_product_info(conn, name):
+    query = "SELECT name, price, ex_date, num FROM Product WHERE name = %s"
+    with conn.cursor() as cursor:
+        cursor.execute(query, (name,))
+        result = cursor.fetchone()
+    
+    if result:
+        return result
+    else:
+        return "상품을 찾을 수 없습니다."
 
 
 
@@ -157,19 +198,51 @@ while True:
         num = input("수량을 입력하세요: ")
         changes = "상품 등록"
 
-        insert_Product(conn, name, price, ex_date, num, changes)
+        insert_or_update_product(conn, name, price, ex_date, num)
 
     elif menu == "2":
         query_with_fetchall(conn)
 
     elif menu == "3":
-        pass
+        product_name = input("조회하고 싶은 상품명을 입력하세요: ")
+        product_info = get_product_info(conn, product_name)
+
+        if product_info != "상품을 찾을 수 없습니다.":
+            print(f"상품명: {product_info[0]}")
+            print(f"가격: {product_info[1]}원")
+            print(f"유통기한: {product_info[2]}")
+            print(f"수량: {product_info[3]}개")
+        else:
+            print(f"{product_name} 상품은 존재하지 않습니다.")
+
 
     elif menu == "4":
-        pass
+        action = input("수정하려면 1을, 삭제하려면 2를 입력하세요: ").strip()
+
+        if action == "1":  # 수량 수정
+            name = input("수정할 상품명을 입력하세요: ")
+            num = input("새로운 수량을 입력하세요: ")
+
+            updated_rows = update_Product(conn, name, num)
+            if updated_rows > 0:
+                print(f"'{name}'의 수량이 {num}으로 변경되었습니다.")
+            else:
+                print("해당 상품을 찾을 수 없습니다.")
+
+        elif action == "2":  # 삭제 기능 추가
+            name = input("삭제할 상품명을 입력하세요: ")
+            deleted_rows = delete_Product(conn, name)
+
+            if deleted_rows > 0:
+                print(f"'{name}' 상품이 삭제되었습니다.")
+            else:
+                print("해당 상품을 찾을 수 없습니다.")
+
+        else:
+            print("잘못된 입력입니다. 다시 시도하세요.")
 
     elif menu == "5":
-        pass
+        show_product_logs(conn)
 
     elif menu == "6":
         print("프로그램 종료")
