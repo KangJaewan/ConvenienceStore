@@ -1,4 +1,3 @@
-import sys
 from mysql.connector import MySQLConnection, Error
 from configparser import ConfigParser
 
@@ -94,46 +93,24 @@ def delete_book(conn, book_id):
     return affected_rows  # Return the number of affected rows
 
 
+if __name__ == "__main__":
+    print(__name__)
+    print(read_config())
 
-# 메뉴
-display = '''
--------------------------------------------------------------
-1. 상품 정보 등록           | 2. 전체 재고 현황 조회
-3. 개별 재고 검색           | 4. 재고 정보 수정 및 삭제
-5. 입출고 내역 기록 및 조회 | 6. 프로그램 종료
--------------------------------------------------------------
-메뉴를 선택하세요 >>> '''
+    conn = connect()
 
-conn = connect()
+    # query_with_fetchall(conn)
 
-while True:
-    menu = input(display).strip()
+    # title = input("책제목  입력: ")
+    # isbn = input("ISBN   입력: ")
+    # insert_book(conn, title, isbn)
 
-    # 상품 정보 등록
-    if menu == '1':
-       
+    # query_with_fetchall(conn)
 
+    # update_book(85,'speking')
 
-    elif menu == '2':
-       pass
+    # delete_book(conn, 85)
 
-    elif menu == '3':
-       pass
-       
-        
-    elif menu == '4':
-       pass
-        
+    query_with_fetchall(conn)
 
-    elif menu == '5':
-       pass
-        
-
-    elif menu == '6':
-        print('프로그램 종료')
-        conn.close()
-        sys.exit()
-
-    # 잘못된 입력 처리
-    else:
-        print("메뉴 선택을 잘못하셨습니다.")
+    conn.close()
