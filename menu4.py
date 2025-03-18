@@ -105,21 +105,27 @@ def insert_Product(conn, name, price, ex_date, num, changes):
     return Product_id
 
 def update_Product(conn, name, num):
-    # prepare query and data
-    query = """ UPDATE product
-                SET num = %s
-                WHERE name = %s """
+    # 준비된 쿼리: 수량 업데이트, 변경 시간과 로그 추가
+    query = """ 
+    UPDATE Product
+    SET num = %s, time = NOW(), changes = '수량 변경'
+    WHERE name = %s
+    """
 
     data = (num, name)
 
-    affected_rows = 0  # Initialize the variable to store the number of affected rows
+    affected_rows = 0  # 영향을 받은 행의 수를 저장할 변수 초기화
 
+    # 데이터베이스에 쿼리 실행
     with conn.cursor() as cursor:
         cursor.execute(query, data)
-        affected_rows = cursor.rowcount
+        affected_rows = cursor.rowcount  # 변경된 행 수를 가져옴
+
+    # 커밋하여 변경 사항 저장
     conn.commit()
 
-    return affected_rows  # Return the number of affected rows
+    return affected_rows  # 변경된 행의 수 반환
+
 
 
 def delete_Product(conn, name):
