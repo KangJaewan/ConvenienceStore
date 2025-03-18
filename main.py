@@ -134,6 +134,7 @@ def delete_book(conn, book_id):
     return affected_rows  # Return the number of affected rows
 
 
+
 # 메뉴
 display = """
 -------------------------------------------------------------
