@@ -71,14 +71,14 @@ while True:
         product_name = input("조회하고 싶은 상품명을 입력하세요: ")
         product_infos = csf.get_product_info(conn, product_name)
 
-        if product_infos:
+        if product_infos:  # 결과가 있다면 출력
             for idx, info in enumerate(product_infos, start=1):
                 print(f"\n[{idx}]")
                 print(f"상품명: {info[0]}")
                 print(f"가격: {info[1]}원")
                 print(f"유통기한: {info[2]}")
                 print(f"수량: {info[3]}개")
-        else:
+        else:  # 결과가 없으면
             print(f"{product_name} 상품은 존재하지 않습니다.")
 
     elif menu == "4":

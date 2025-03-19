@@ -164,10 +164,7 @@ def show_product_logs(conn):
 def get_product_info(conn, name):
     query = "SELECT name, price, ex_date, num FROM Product WHERE name = %s"
     with conn.cursor() as cursor:
-         cursor.execute(query, (name,))
-         result = cursor.fetchall()
+        cursor.execute(query, (name,))
+        result = cursor.fetchall()
     
-    if result:
-         return result
-    else:
-         return "상품을 찾을 수 없습니다."
+    return result  # 결과가 없으면 [] (빈 리스트) 반환
