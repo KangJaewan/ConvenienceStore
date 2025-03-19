@@ -205,13 +205,15 @@ while True:
 
     elif menu == "3":
         product_name = input("조회하고 싶은 상품명을 입력하세요: ")
-        product_info = get_product_info(conn, product_name)
+        product_infos = get_product_info(conn, product_name)
 
-        if product_info != "상품을 찾을 수 없습니다.":
-            print(f"상품명: {product_info[0]}")
-            print(f"가격: {product_info[1]}원")
-            print(f"유통기한: {product_info[2]}")
-            print(f"수량: {product_info[3]}개")
+        if product_infos:
+            for idx, info in enumerate(product_infos, start=1):
+                print(f"\n[{idx}]")
+                print(f"상품명: {info[0]}")
+                print(f"가격: {info[1]}원")
+                print(f"유통기한: {info[2]}")
+                print(f"수량: {info[3]}개")
         else:
             print(f"{product_name} 상품은 존재하지 않습니다.")
 
