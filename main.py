@@ -167,7 +167,7 @@ def get_product_info(conn, name):
     query = "SELECT name, price, ex_date, num FROM Product WHERE name = %s"
     with conn.cursor() as cursor:
         cursor.execute(query, (name,))
-        result = cursor.fetchone()
+        result = cursor.fetchall()
     
     if result:
         return result
