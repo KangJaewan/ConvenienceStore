@@ -217,7 +217,6 @@ while True:
         else:
             print(f"{product_name} 상품은 존재하지 않습니다.")
 
-
     elif menu == "4":
         action = input("수정하려면 1을, 삭제하려면 2를 입력하세요: ").strip()
 
